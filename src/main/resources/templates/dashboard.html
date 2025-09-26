@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대시보드 - Convertio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+<header class="bg-white border-b border-gray-200 px-8 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <a href="/" class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center text-white">
+                📄
+            </div>
+            <span class="text-2xl font-bold">Convertio</span>
+        </a>
+        <div class="flex items-center gap-6">
+            <span id="userName" class="text-gray-700"></span>
+            <button onclick="logout()" class="text-gray-600 hover:text-purple-600">로그아웃</button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-8 py-12">
+    <!-- 사용자 정보 -->
+    <div class="bg-gradient-to-r from-purple-600 to-purple-800 rounded-2xl p-8 text-white mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">대시보드</h1>
+                <p class="text-purple-200" id="welcomeText">환영합니다!</p>
+            </div>
+            <div class="text-right">
+                <span class="badge bg-white text-purple-700 px-4 py-2 rounded-full font-bold" id="userRole">FREE</span>
+                <p class="text-sm text-purple-200 mt-2">무료 플랜</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="grid md:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-3xl">📊</span>
+                <span class="text-2xl font-bold text-purple-600" id="todayUsage">0</span>
+            </div>
+            <h3 class="font-semibold text-gray-800">오늘 사용량</h3>
+            <p class="text-sm text-gray-500">FREE: 하루 10회</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-3xl">📅</span>
+                <span class="text-2xl font-bold text-blue-600" id="monthlyUsage">0</span>
+            </div>
+            <h3 class="font-semibold text-gray-800">이번 달 사용량</h3>
+            <p class="text-sm text-gray-500">누적 변환 횟수</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-3xl">🔑</span>
+                <span class="text-2xl font-bold text-green-600">API</span>
+            </div>
+            <h3 class="font-semibold text-gray-800">API 키</h3>
+            <p class="text-sm text-gray-500">Pro 이상 사용 가능</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-3xl">💎</span>
+                <span class="text-2xl font-bold text-orange-600">UP</span>
+            </div>
+            <h3 class="font-semibold text-gray-800">플랜 업그레이드</h3>
+            <p class="text-sm text-gray-500">무제한으로!</p>
+        </div>
+    </div>
+
+    <!-- API 키 섹션 -->
+    <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm" id="apiKeySection">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">🔑 API 키</h2>
+        <div id="apiKeyContent">
+            <p class="text-gray-600">Pro 플랜으로 업그레이드하면 API를 사용할 수 있습니다.</p>
+            <a href="/pricing" class="inline-block mt-4 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700">
+                플랜 업그레이드
+            </a>
+        </div>
+    </div>
+
+    <!-- 빠른 실행 -->
+    <div class="bg-white rounded-2xl p-8 shadow-sm">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">🚀 빠른 실행</h2>
+
+        <div class="grid md:grid-cols-3 gap-4">
+            <a href="/pdf/merge" class="p-6 border-2 border-gray-200 rounded-xl hover:border-purple-500 transition">
+                <div class="text-4xl mb-3">📑</div>
+                <h3 class="font-bold text-gray-800 mb-2">PDF 병합</h3>
+                <p class="text-sm text-gray-600">여러 PDF를 하나로</p>
+            </a>
+
+            <a href="/pdf/split" class="p-6 border-2 border-gray-200 rounded-xl hover:border-purple-500 transition">
+                <div class="text-4xl mb-3">✂️</div>
+                <h3 class="font-bold text-gray-800 mb-2">PDF 분할</h3>
+                <p class="text-sm text-gray-600">페이지별 분할</p>
+            </a>
+
+            <a href="/image/resize" class="p-6 border-2 border-gray-200 rounded-xl hover:border-purple-500 transition">
+                <div class="text-4xl mb-3">🖼️</div>
+                <h3 class="font-bold text-gray-800 mb-2">이미지 리사이즈</h3>
+                <p class="text-sm text-gray-600">크기 조절</p>
+            </a>
+        </div>
+    </div>
+</main>
+
+<script>
+    // 로그인 확인
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+    if (!user) {
+        alert('로그인이 필요합니다.');
+        window.location.href = '/login';
+    } else {
+        // 사용자 정보 표시
+        document.getElementById('userName').textContent = user.name + '님';
+        document.getElementById('welcomeText').textContent = `환영합니다, ${user.name}님!`;
+        document.getElementById('userRole').textContent = user.role;
+        document.getElementById('todayUsage').textContent = user.dailyUsage || 0;
+        document.getElementById('monthlyUsage').textContent = user.monthlyUsage || 0;
+
+        // PRO/ENTERPRISE 사용자면 API 키 표시
+        if (user.role === 'PRO' || user.role === 'ENTERPRISE') {
+            document.getElementById('apiKeyContent').innerHTML = `
+                    <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4">
+                        <code class="text-sm text-gray-800">${user.apiKey}</code>
+                    </div>
+                    <button onclick="copyApiKey()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                        📋 복사
+                    </button>
+                `;
+        }
+    }
+
+    function copyApiKey() {
+        const apiKey = user.apiKey;
+        navigator.clipboard.writeText(apiKey);
+        alert('✅ API 키가 복사되었습니다!');
+    }
+
+    function logout() {
+        localStorage.removeItem('user');
+        alert('로그아웃 되었습니다.');
+        window.location.href = '/';
+    }
+</script>
+</body>
+</html>

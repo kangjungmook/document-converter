@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 분할 - Convertio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background: #e9ecef;
+            border-color: #5568d3;
+        }
+
+        .mode-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-card.active {
+            border-color: #667eea;
+            background: #667eea10;
+        }
+
+        .mode-card:hover {
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+<header class="header">
+    <a href="/" class="logo">
+        <div class="logo-icon">📄</div>
+        <span>Convertio</span>
+    </a>
+</header>
+
+<main class="max-w-4xl mx-auto py-12 px-4">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-3">✂️ PDF 분할</h1>
+        <p class="text-gray-600">PDF를 개별 페이지로 분할하거나 원하는 범위로 추출하세요</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-8">
+        <!-- 파일 업로드 -->
+        <div class="upload-area" id="uploadArea">
+            <div class="text-6xl mb-4">📑</div>
+            <p class="text-xl text-gray-700 mb-2">PDF 파일을 선택하거나 드래그하세요</p>
+            <p class="text-gray-500 text-sm">최대 50MB</p>
+            <input type="file" id="fileInput" accept=".pdf" class="hidden">
+            <button onclick="document.getElementById('fileInput').click()"
+                    class="mt-4 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+                파일 선택
+            </button>
+        </div>
+
+        <!-- PDF 정보 -->
+        <div id="pdfInfo" class="mt-6 p-6 bg-blue-50 rounded-lg" style="display: none;">
+            <h3 class="font-bold text-gray-800 mb-2">📄 파일 정보</h3>
+            <p id="fileName" class="text-gray-700"></p>
+            <p id="pageCount" class="text-gray-700"></p>
+            <p id="fileSize" class="text-gray-700"></p>
+        </div>
+
+        <!-- 분할 모드 선택 -->
+        <div id="modeSelection" class="mt-6" style="display: none;">
+            <h3 class="font-bold text-gray-800 mb-4">분할 방식 선택</h3>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="mode-card active" id="modeAll" onclick="selectMode('all')">
+                    <div class="text-3xl mb-2">📄</div>
+                    <h4 class="font-bold text-gray-800">전체 페이지 분할</h4>
+                    <p class="text-sm text-gray-600 mt-2">모든 페이지를 개별 PDF로 분할</p>
+                </div>
+
+                <div class="mode-card" id="modeRange" onclick="selectMode('range')">
+                    <div class="text-3xl mb-2">📋</div>
+                    <h4 class="font-bold text-gray-800">범위 지정 추출</h4>
+                    <p class="text-sm text-gray-600 mt-2">원하는 페이지 범위만 추출</p>
+                </div>
+            </div>
+
+            <!-- 범위 선택 (range 모드) -->
+            <div id="rangeOptions" class="bg-gray-50 rounded-lg p-6" style="display: none;">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">시작 페이지</label>
+                        <input type="number" id="startPage" min="1" value="1"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">끝 페이지</label>
+                        <input type="number" id="endPage" min="1" value="1"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+            </div>
+
+            <button id="splitBtn"
+                    class="w-full mt-6 bg-purple-600 text-white py-4 rounded-lg text-lg font-bold hover:bg-purple-700 transition">
+                PDF 분할하기
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const pdfInfo = document.getElementById('pdfInfo');
+    const modeSelection = document.getElementById('modeSelection');
+    const rangeOptions = document.getElementById('rangeOptions');
+    const splitBtn = document.getElementById('splitBtn');
+
+    let selectedFile = null;
+    let pdfData = null;
+    let currentMode = 'all';
+
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#667eea';
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFile(e.target.files[0]);
+    });
+
+    async function handleFile(file) {
+        if (!file || file.type !== 'application/pdf') {
+            alert('PDF 파일만 선택 가능합니다.');
+            return;
+        }
+
+        selectedFile = file;
+
+        // PDF 정보 가져오기
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/pdf/api/info', {
+                method: 'POST',
+                body: formData
+            });
+
+            pdfData = await response.json();
+
+            document.getElementById('fileName').textContent = `파일명: ${pdfData.fileName}`;
+            document.getElementById('pageCount').textContent = `페이지 수: ${pdfData.pageCount}페이지`;
+            document.getElementById('fileSize').textContent = `파일 크기: ${(pdfData.fileSize / 1024 / 1024).toFixed(2)} MB`;
+
+            document.getElementById('endPage').max = pdfData.pageCount;
+            document.getElementById('endPage').value = pdfData.pageCount;
+
+            pdfInfo.style.display = 'block';
+            modeSelection.style.display = 'block';
+        } catch (error) {
+            alert('PDF 정보를 가져오는데 실패했습니다.');
+        }
+    }
+
+    function selectMode(mode) {
+        currentMode = mode;
+
+        document.getElementById('modeAll').classList.remove('active');
+        document.getElementById('modeRange').classList.remove('active');
+
+        if (mode === 'all') {
+            document.getElementById('modeAll').classList.add('active');
+            rangeOptions.style.display = 'none';
+        } else {
+            document.getElementById('modeRange').classList.add('active');
+            rangeOptions.style.display = 'block';
+        }
+    }
+
+    splitBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+
+        splitBtn.disabled = true;
+        splitBtn.textContent = '처리 중...';
+
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            let response;
+
+            if (currentMode === 'all') {
+                response = await fetch('/pdf/api/split', {
+                    method: 'POST',
+                    body: formData
+                });
+            } else {
+                const startPage = parseInt(document.getElementById('startPage').value);
+                const endPage = parseInt(document.getElementById('endPage').value);
+
+                if (startPage > endPage) {
+                    alert('시작 페이지가 끝 페이지보다 클 수 없습니다.');
+                    return;
+                }
+
+                formData.append('startPage', startPage);
+                formData.append('endPage', endPage);
+
+                response = await fetch('/pdf/api/split-range', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentMode === 'all' ? 'split_pages.zip' : 'extracted_pages.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                alert('✅ PDF 분할이 완료되었습니다!');
+            }
+        } catch (error) {
+            alert('❌ 오류가 발생했습니다: ' + error.message);
+        } finally {
+            splitBtn.disabled = false;
+            splitBtn.textContent = 'PDF 분할하기';
+        }
+    });
+</script>
+</body>
+</html>
