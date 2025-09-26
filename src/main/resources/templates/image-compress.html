@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이미지 압축 - 올인원 문서 변환기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background: #e9ecef;
+            border-color: #5568d3;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .quality-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .quality-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .quality-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+<!-- 헤더 -->
+<header class="header">
+    <a href="/" class="logo">
+        <div class="logo-icon">📄</div>
+        <span>Convertio</span>
+    </a>
+</header>
+
+<!-- 메인 컨텐츠 -->
+<main class="max-w-4xl mx-auto py-12 px-4">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-3">💾 이미지 압축</h1>
+        <p class="text-gray-600">이미지 용량을 줄입니다</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-8">
+        <!-- 파일 업로드 -->
+        <div class="upload-area" id="uploadArea">
+            <div class="text-6xl mb-4">🖼️</div>
+            <p class="text-xl text-gray-700 mb-2">이미지 파일을 선택하거나 드래그하세요</p>
+            <p class="text-gray-500 text-sm">JPG, PNG, GIF, BMP 지원</p>
+            <input type="file" id="fileInput" accept="image/*" class="hidden">
+            <button onclick="document.getElementById('fileInput').click()"
+                    class="mt-4 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+                파일 선택
+            </button>
+        </div>
+
+        <!-- 미리보기 -->
+        <div id="preview" style="display: none;">
+            <img id="previewImage" class="preview-image" alt="미리보기">
+            <p class="text-center text-gray-600" id="imageInfo"></p>
+        </div>
+
+        <!-- 압축 설정 -->
+        <div id="compressOptions" class="mt-6" style="display: none;">
+            <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="font-bold text-gray-800 mb-4">압축 품질 설정</h3>
+
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-sm font-semibold text-gray-700">품질</label>
+                        <span class="text-2xl font-bold text-purple-600" id="qualityValue">80%</span>
+                    </div>
+                    <input type="range" id="quality" min="10" max="100" value="80" step="10"
+                           class="quality-slider">
+                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>낮은 품질<br>(작은 용량)</span>
+                        <span>높은 품질<br>(큰 용량)</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setQuality(50)" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm">
+                        50% (최소)
+                    </button>
+                    <button onclick="setQuality(70)" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm">
+                        70% (권장)
+                    </button>
+                    <button onclick="setQuality(90)" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 text-sm">
+                        90% (고품질)
+                    </button>
+                </div>
+
+                <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        💡 <strong>팁:</strong> 70%는 품질과 용량의 균형이 좋은 설정입니다.
+                    </p>
+                </div>
+            </div>
+
+            <button id="compressBtn"
+                    class="w-full mt-6 bg-purple-600 text-white py-4 rounded-lg text-lg font-bold hover:bg-purple-700 transition">
+                이미지 압축하기
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const preview = document.getElementById('preview');
+    const previewImage = document.getElementById('previewImage');
+    const imageInfo = document.getElementById('imageInfo');
+    const compressOptions = document.getElementById('compressOptions');
+    const compressBtn = document.getElementById('compressBtn');
+    const qualitySlider = document.getElementById('quality');
+    const qualityValue = document.getElementById('qualityValue');
+
+    let selectedFile = null;
+
+    // 드래그 앤 드롭
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#667eea';
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = '#667eea';
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFile(e.target.files[0]);
+    });
+
+    // 품질 슬라이더 이벤트
+    qualitySlider.addEventListener('input', (e) => {
+        qualityValue.textContent = e.target.value + '%';
+    });
+
+    function handleFile(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            alert('이미지 파일만 선택 가능합니다.');
+            return;
+        }
+
+        selectedFile = file;
+
+        // 미리보기
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImage.src = e.target.result;
+
+            const img = new Image();
+            img.onload = () => {
+                const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                imageInfo.textContent = `원본: ${img.width} × ${img.height}px | ${sizeMB} MB`;
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        preview.style.display = 'block';
+        compressOptions.style.display = 'block';
+    }
+
+    function setQuality(value) {
+        qualitySlider.value = value;
+        qualityValue.textContent = value + '%';
+    }
+
+    compressBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+
+        const quality = qualitySlider.value / 100;
+
+        // 로그인 확인
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+        compressBtn.disabled = true;
+        compressBtn.textContent = '처리 중...';
+
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('quality', quality);
+
+            // userId 추가
+            if (user && user.id) {
+                formData.append('userId', user.id);
+            }
+
+            const response = await fetch('/image/api/compress', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'compressed_' + selectedFile.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                const compressedSizeMB = (blob.size / 1024 / 1024).toFixed(2);
+                const originalSizeMB = (selectedFile.size / 1024 / 1024).toFixed(2);
+                const reduction = ((1 - blob.size / selectedFile.size) * 100).toFixed(0);
+
+                alert(`✅ 이미지 압축 완료!\n원본: ${originalSizeMB}MB → 압축: ${compressedSizeMB}MB (${reduction}% 감소)`);
+
+                // 사용량 업데이트
+                if (user) {
+                    user.dailyUsage = (user.dailyUsage || 0) + 1;
+                    localStorage.setItem('user', JSON.stringify(user));
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || '변환 실패');
+            }
+        } catch (error) {
+            alert('❌ ' + error.message);
+        } finally {
+            compressBtn.disabled = false;
+            compressBtn.textContent = '이미지 압축하기';
+        }
+    });
+</script>
+</body>
+</html>

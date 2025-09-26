@@ -13,10 +13,21 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             transition: all 0.3s;
         }
-
         .stat-card:hover {
             box-shadow: 0 8px 24px rgba(0,0,0,0.1);
             transform: translateY(-2px);
+        }
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
         }
     </style>
 </head>
@@ -46,20 +57,23 @@
             </div>
             <div class="text-right">
                 <span class="badge bg-white text-purple-700 px-4 py-2 rounded-full font-bold" id="userRole">FREE</span>
-                <p class="text-sm text-purple-200 mt-2">무료 플랜</p>
+                <p class="text-sm text-purple-200 mt-2" id="planDescription">무료 플랜 (10회/일)</p>
             </div>
         </div>
     </div>
 
-    <!-- 통계 카드 -->
+    <!-- 전체 사용량 통계 -->
     <div class="grid md:grid-cols-4 gap-6 mb-8">
         <div class="stat-card">
             <div class="flex items-center justify-between mb-4">
                 <span class="text-3xl">📊</span>
                 <span class="text-2xl font-bold text-purple-600" id="todayUsage">0</span>
             </div>
-            <h3 class="font-semibold text-gray-800">오늘 사용량</h3>
-            <p class="text-sm text-gray-500">FREE: 하루 10회</p>
+            <h3 class="font-semibold text-gray-800">오늘 총 사용량</h3>
+            <p class="text-sm text-gray-500" id="usageLimit">FREE: 하루 10회</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="totalProgress" style="width: 0%"></div>
+            </div>
         </div>
 
         <div class="stat-card">
@@ -73,11 +87,11 @@
 
         <div class="stat-card">
             <div class="flex items-center justify-between mb-4">
-                <span class="text-3xl">🔑</span>
-                <span class="text-2xl font-bold text-green-600">API</span>
+                <span class="text-3xl">⏰</span>
+                <span class="text-2xl font-bold text-green-600" id="remainingUsage">10</span>
             </div>
-            <h3 class="font-semibold text-gray-800">API 키</h3>
-            <p class="text-sm text-gray-500">Pro 이상 사용 가능</p>
+            <h3 class="font-semibold text-gray-800">남은 사용 횟수</h3>
+            <p class="text-sm text-gray-500">오늘 사용 가능</p>
         </div>
 
         <div class="stat-card">
@@ -87,6 +101,81 @@
             </div>
             <h3 class="font-semibold text-gray-800">플랜 업그레이드</h3>
             <p class="text-sm text-gray-500">무제한으로!</p>
+        </div>
+    </div>
+
+    <!-- 기능별 사용량 -->
+    <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">🔧 기능별 사용 현황</h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- PDF 병합 -->
+            <div class="border-2 border-gray-200 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">📑</span>
+                        <div>
+                            <h3 class="font-bold text-gray-800">PDF 병합</h3>
+                            <p class="text-sm text-gray-500">여러 PDF를 하나로</p>
+                        </div>
+                    </div>
+                    <span class="text-2xl font-bold text-purple-600" id="pdfMergeUsage">0</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="pdfMergeProgress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- PDF 분할 -->
+            <div class="border-2 border-gray-200 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">✂️</span>
+                        <div>
+                            <h3 class="font-bold text-gray-800">PDF 분할</h3>
+                            <p class="text-sm text-gray-500">페이지별 분할</p>
+                        </div>
+                    </div>
+                    <span class="text-2xl font-bold text-blue-600" id="pdfSplitUsage">0</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="pdfSplitProgress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- 이미지 리사이즈 -->
+            <div class="border-2 border-gray-200 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">📏</span>
+                        <div>
+                            <h3 class="font-bold text-gray-800">이미지 리사이즈</h3>
+                            <p class="text-sm text-gray-500">크기 조절</p>
+                        </div>
+                    </div>
+                    <span class="text-2xl font-bold text-green-600" id="imageResizeUsage">0</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="imageResizeProgress" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- 이미지 압축 -->
+            <div class="border-2 border-gray-200 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">💾</span>
+                        <div>
+                            <h3 class="font-bold text-gray-800">이미지 압축</h3>
+                            <p class="text-sm text-gray-500">용량 줄이기</p>
+                        </div>
+                    </div>
+                    <span class="text-2xl font-bold text-orange-600" id="imageCompressUsage">0</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="imageCompressProgress" style="width: 0%"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -135,29 +224,96 @@
         alert('로그인이 필요합니다.');
         window.location.href = '/login';
     } else {
-        // 사용자 정보 표시
+        // 기본 사용자 정보 표시
         document.getElementById('userName').textContent = user.name + '님';
         document.getElementById('welcomeText').textContent = `환영합니다, ${user.name}님!`;
         document.getElementById('userRole').textContent = user.role;
-        document.getElementById('todayUsage').textContent = user.dailyUsage || 0;
-        document.getElementById('monthlyUsage').textContent = user.monthlyUsage || 0;
+
+        // 플랜별 설명
+        const planDesc = {
+            'FREE': '무료 플랜 (10회/일)',
+            'PRO': 'PRO 플랜 (100회/일)',
+            'ENTERPRISE': 'ENTERPRISE 플랜 (무제한)'
+        };
+        document.getElementById('planDescription').textContent = planDesc[user.role] || '무료 플랜';
+
+        // 서버에서 실시간 사용량 가져오기
+        fetchUsageData();
 
         // PRO/ENTERPRISE 사용자면 API 키 표시
         if (user.role === 'PRO' || user.role === 'ENTERPRISE') {
             document.getElementById('apiKeyContent').innerHTML = `
-                    <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4">
-                        <code class="text-sm text-gray-800">${user.apiKey}</code>
-                    </div>
-                    <button onclick="copyApiKey()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-                        📋 복사
-                    </button>
-                `;
+                <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4">
+                    <code class="text-sm text-gray-800">${user.apiKey}</code>
+                </div>
+                <button onclick="copyApiKey()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                    📋 복사
+                </button>
+            `;
+        }
+    }
+
+    // 서버에서 사용량 데이터 가져오기
+    async function fetchUsageData() {
+        try {
+            const response = await fetch(`/pdf/api/usage/${user.id}`);
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ 사용량 데이터:', data);
+                updateUsageDisplay(data);
+            } else {
+                console.error('❌ 사용량 조회 실패:', response.status);
+                // 서버 에러시 localStorage 데이터 사용
+                updateUsageDisplay({
+                    dailyUsage: user.dailyUsage || 0,
+                    monthlyUsage: user.monthlyUsage || 0,
+                    pdfMergeUsage: 0,
+                    pdfSplitUsage: 0,
+                    imageResizeUsage: 0,
+                    imageCompressUsage: 0,
+                    remainingUsage: 10,
+                    role: user.role
+                });
+            }
+        } catch (error) {
+            console.error('❌ 사용량 조회 에러:', error);
+        }
+    }
+
+    // 사용량 표시 업데이트
+    function updateUsageDisplay(data) {
+        const limit = data.role === 'FREE' ? 10 : (data.role === 'PRO' ? 100 : 999999);
+        const remaining = data.remainingUsage !== undefined ? data.remainingUsage : Math.max(0, limit - data.dailyUsage);
+
+        // 전체 사용량
+        document.getElementById('todayUsage').textContent = data.dailyUsage || 0;
+        document.getElementById('monthlyUsage').textContent = data.monthlyUsage || 0;
+        document.getElementById('remainingUsage').textContent = data.role === 'ENTERPRISE' ? '∞' : remaining;
+        document.getElementById('usageLimit').textContent =
+            data.role === 'FREE' ? 'FREE: 하루 10회' :
+                data.role === 'PRO' ? 'PRO: 하루 100회' : 'ENTERPRISE: 무제한';
+
+        // 전체 진행률
+        const totalProgress = data.role === 'ENTERPRISE' ? 0 : Math.min(100, (data.dailyUsage / limit) * 100);
+        document.getElementById('totalProgress').style.width = totalProgress + '%';
+
+        // 기능별 사용량
+        document.getElementById('pdfMergeUsage').textContent = data.pdfMergeUsage || 0;
+        document.getElementById('pdfSplitUsage').textContent = data.pdfSplitUsage || 0;
+        document.getElementById('imageResizeUsage').textContent = data.imageResizeUsage || 0;
+        document.getElementById('imageCompressUsage').textContent = data.imageCompressUsage || 0;
+
+        // 기능별 진행률
+        if (data.role !== 'ENTERPRISE') {
+            document.getElementById('pdfMergeProgress').style.width = Math.min(100, ((data.pdfMergeUsage || 0) / limit) * 100) + '%';
+            document.getElementById('pdfSplitProgress').style.width = Math.min(100, ((data.pdfSplitUsage || 0) / limit) * 100) + '%';
+            document.getElementById('imageResizeProgress').style.width = Math.min(100, ((data.imageResizeUsage || 0) / limit) * 100) + '%';
+            document.getElementById('imageCompressProgress').style.width = Math.min(100, ((data.imageCompressUsage || 0) / limit) * 100) + '%';
         }
     }
 
     function copyApiKey() {
-        const apiKey = user.apiKey;
-        navigator.clipboard.writeText(apiKey);
+        navigator.clipboard.writeText(user.apiKey);
         alert('✅ API 키가 복사되었습니다!');
     }
 
@@ -166,6 +322,9 @@
         alert('로그아웃 되었습니다.');
         window.location.href = '/';
     }
+
+    // 5초마다 사용량 새로고침
+    setInterval(fetchUsageData, 5000);
 </script>
 </body>
 </html>

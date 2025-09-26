@@ -1,5 +1,6 @@
 package com.converter.document_converter.controller;
 
+import com.converter.document_converter.entity.User;
 import com.converter.document_converter.service.PdfService;
 import com.converter.document_converter.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -51,8 +52,8 @@ public class PdfController {
                 long totalSize = files.stream().mapToLong(MultipartFile::getSize).sum();
                 userService.checkFileSize(userId, totalSize);
 
-                // 사용량 증가
-                userService.incrementUsage(userId);
+                // 기능별 사용량 증가
+                userService.incrementUsage(userId, User.FeatureType.PDF_MERGE);
             }
 
             byte[] mergedPdf = pdfService.mergePdfs(files);
@@ -84,7 +85,7 @@ public class PdfController {
             // 사용자 체크
             if (userId != null) {
                 userService.checkFileSize(userId, file.getSize());
-                userService.incrementUsage(userId);
+                userService.incrementUsage(userId, User.FeatureType.PDF_SPLIT);
             }
 
             byte[] zipFile = pdfService.splitPdfByPage(file);
@@ -108,20 +109,34 @@ public class PdfController {
     // PDF 분할 API (범위 지정)
     @PostMapping("/api/split-range")
     @ResponseBody
-    public ResponseEntity<Resource> splitPdfRange(
+    public ResponseEntity<?> splitPdfRange(
             @RequestParam("file") MultipartFile file,
             @RequestParam("startPage") int startPage,
-            @RequestParam("endPage") int endPage
-    ) throws IOException {
-        byte[] splitPdf = pdfService.splitPdfByRange(file, startPage, endPage);
-        ByteArrayResource resource = new ByteArrayResource(splitPdf);
+            @RequestParam("endPage") int endPage,
+            @RequestParam(value = "userId", required = false) Long userId
+    ) {
+        try {
+            if (userId != null) {
+                userService.checkFileSize(userId, file.getSize());
+                userService.incrementUsage(userId, User.FeatureType.PDF_SPLIT);
+            }
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=pages_" + startPage + "_to_" + endPage + ".pdf")
-                .contentType(MediaType.APPLICATION_PDF)
-                .contentLength(splitPdf.length)
-                .body(resource);
+            byte[] splitPdf = pdfService.splitPdfByRange(file, startPage, endPage);
+            ByteArrayResource resource = new ByteArrayResource(splitPdf);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=pages_" + startPage + "_to_" + endPage + ".pdf")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .contentLength(splitPdf.length)
+                    .body(resource);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "파일 처리 중 오류가 발생했습니다."));
+        }
     }
 
     // PDF 정보 조회 API
@@ -131,5 +146,18 @@ public class PdfController {
             throws IOException {
         PdfService.PdfInfo info = pdfService.getPdfInfo(file);
         return ResponseEntity.ok(info);
+    }
+
+    // 사용량 조회 API
+    @GetMapping("/api/usage/{userId}")
+    @ResponseBody
+    public ResponseEntity<?> getUserUsage(@PathVariable Long userId) {
+        try {
+            UserService.UsageInfo usage = userService.getUserUsage(userId);
+            return ResponseEntity.ok(usage);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
 }

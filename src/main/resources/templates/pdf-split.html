@@ -224,12 +224,20 @@
     splitBtn.addEventListener('click', async () => {
         if (!selectedFile) return;
 
+        // 로그인 확인
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+
         splitBtn.disabled = true;
         splitBtn.textContent = '처리 중...';
 
         try {
             const formData = new FormData();
             formData.append('file', selectedFile);
+
+            // userId 추가 (중요!)
+            if (user && user.id) {
+                formData.append('userId', user.id);
+            }
 
             let response;
 
@@ -244,6 +252,8 @@
 
                 if (startPage > endPage) {
                     alert('시작 페이지가 끝 페이지보다 클 수 없습니다.');
+                    splitBtn.disabled = false;
+                    splitBtn.textContent = 'PDF 분할하기';
                     return;
                 }
 
@@ -268,9 +278,18 @@
                 window.URL.revokeObjectURL(url);
 
                 alert('✅ PDF 분할이 완료되었습니다!');
+
+                // 사용량 업데이트
+                if (user) {
+                    user.dailyUsage = (user.dailyUsage || 0) + 1;
+                    localStorage.setItem('user', JSON.stringify(user));
+                }
+            } else {
+                const error = await response.json();
+                throw new Error(error.error || '변환 실패');
             }
         } catch (error) {
-            alert('❌ 오류가 발생했습니다: ' + error.message);
+            alert('❌ ' + error.message);
         } finally {
             splitBtn.disabled = false;
             splitBtn.textContent = 'PDF 분할하기';

@@ -1,10 +1,10 @@
 package com.converter.document_converter.controller;
 
+import com.converter.document_converter.entity.User;
 import com.converter.document_converter.service.ImageService;
 import com.converter.document_converter.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -46,7 +46,7 @@ public class ImageController {
             // 사용자 체크
             if (userId != null) {
                 userService.checkFileSize(userId, file.getSize());
-                userService.incrementUsage(userId);
+                userService.incrementUsage(userId, User.FeatureType.IMAGE_RESIZE);
             }
 
             byte[] resizedImage = imageService.resizeImage(file, width, height);
@@ -78,7 +78,7 @@ public class ImageController {
             // 사용자 체크
             if (userId != null) {
                 userService.checkFileSize(userId, file.getSize());
-                userService.incrementUsage(userId);
+                userService.incrementUsage(userId, User.FeatureType.IMAGE_COMPRESS);
             }
 
             byte[] compressedImage = imageService.compressImage(file, quality);
